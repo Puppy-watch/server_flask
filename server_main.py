@@ -100,7 +100,7 @@ def login():
         user = cursor.fetchone()
 
         if not user or not check_password_hash(user[2], userPw):
-            return {'error': 'Invalid username or password.'}, 401
+            return {'error': 'Invalid User ID or Password.'}, 401
 
         # 세션에 사용자 정보 저장
         session['user_idx'] = user[0]
@@ -126,8 +126,8 @@ def logout():
 
 
 # 강아지 정보 수정 엔드포인트
-@app.route('/dogs/<int:dog_idx>', methods=['PUT'])
-def update_dog(dog_idx):
+@app.route('/dogs', methods=['PUT'])
+def update_dog():
     data = request.get_json()
 
     # 요청 데이터에서 필요한 정보 추출
@@ -140,8 +140,8 @@ def update_dog(dog_idx):
 
     try:
         # 세션에서 사용자 정보 확인
-        user_idx = session.get('user_idx')
-        if user_idx is None:
+        dog_idx = session.get('dog_idx')
+        if dog_idx is None:
             return jsonify({'error': 'User not logged in.'}), 401
 
         # 데이터베이스에서 사용자 정보 수정
