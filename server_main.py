@@ -83,7 +83,7 @@ def signup():
     except mysql.connector.Error as error:
         return jsonify({'error': 'Failed to signup.', 'details': str(error)}), 500
 
-
+# 로그인 엔드포인트
 @app.route('/login', methods=['POST'])
 def login():
     # 요청에서 필요한 정보 추출
@@ -107,7 +107,7 @@ def login():
         session['dog_idx'] = get_dog_idx(user[0])
 
         response = {
-            'message': 'User logged in successfully.',
+            'message': 'User login successfully.',
             'user idx': user[0],
             'dog idx': get_dog_idx(user[0])
         }
@@ -115,6 +115,14 @@ def login():
         return jsonify(response), 200
     except mysql.connector.Error as error:
         return jsonify({'error': 'Failed to login.', 'details': str(error)}), 500
+
+# 로그아웃 엔드포인트
+@app.route('/logout', methods=['POST'])
+def logout():
+    # 세션에서 사용자 정보 삭제
+    session.pop('user_idx', None)
+    session.pop('dog_idx', None)
+    return jsonify({'message': 'User logout successfully.'}), 200
 
 
 # 강아지 정보 수정 엔드포인트
