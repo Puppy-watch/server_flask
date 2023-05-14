@@ -1,6 +1,6 @@
-from flask import Flask, request, jsonify
-from werkzeug.security import generate_password_hash
-from collections import OrderedDict
+from flask import Flask, request, jsonify, session
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_session import Session
 import mysql.connector
 from db_key import db
 import datetime
@@ -8,6 +8,28 @@ import datetime
 column_list = ['stand', 'sleep', 'seat', 'walk', 'slowWalk', 'run', 'eat', 'bite']
 
 app = Flask(__name__)
+
+# Flask-Session 설정
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SECRET_KEY'] = 'asdfasdfasdfqwerty-puppy'
+Session(app)
+
+def get_dog_idx(user_idx):
+    try:
+        cursor = db.cursor()
+
+        # 사용자의 강아지 인덱스 검색
+        query = "SELECT dog_idx FROM dog WHERE user_idx=%s"
+        cursor.execute(query, (user_idx,))
+        dog = cursor.fetchone()
+
+        if dog:
+            return dog[0]
+        else:
+            return None
+    except mysql.connector.Error as error:
+        # 예외 처리: 강아지 인덱스를 찾을 수 없는 경우
+        return None
 
 
 # 회원가입 엔드포인트
@@ -47,6 +69,10 @@ def signup():
         dog_idx = cursor.lastrowid
         cursor.close()
 
+        # 세션에 사용자 정보 저장
+        session['user_idx'] = user_idx
+        session['dog_idx'] = dog_idx
+
         response = {
             'message': 'User created successfully.',
             'user idx': user_idx,
@@ -56,6 +82,39 @@ def signup():
         return jsonify(response), 201
     except mysql.connector.Error as error:
         return jsonify({'error': 'Failed to signup.', 'details': str(error)}), 500
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    # 요청에서 필요한 정보 추출
+    data = request.json
+    userId = data.get('userId')
+    userPw = data.get('userPw')
+
+    try:
+        cursor = db.cursor()
+
+        # 사용자 확인
+        query = "SELECT * FROM user WHERE userID=%s"
+        cursor.execute(query, (userId,))
+        user = cursor.fetchone()
+
+        if not user or not check_password_hash(user[2], userPw):
+            return {'error': 'Invalid username or password.'}, 401
+
+        # 세션에 사용자 정보 저장
+        session['user_idx'] = user[0]
+        session['dog_idx'] = get_dog_idx(user[0])
+
+        response = {
+            'message': 'User logged in successfully.',
+            'user idx': user[0],
+            'dog idx': get_dog_idx(user[0])
+        }
+
+        return jsonify(response), 200
+    except mysql.connector.Error as error:
+        return jsonify({'error': 'Failed to login.', 'details': str(error)}), 500
 
 
 # 강아지 정보 수정 엔드포인트
@@ -72,6 +131,11 @@ def update_dog(dog_idx):
     thirdTime = data.get('thirdTime')
 
     try:
+        # 세션에서 사용자 정보 확인
+        user_idx = session.get('user_idx')
+        if user_idx is None:
+            return jsonify({'error': 'User not logged in.'}), 401
+
         # 데이터베이스에서 사용자 정보 수정
         cursor = db.cursor()
         update_query = "UPDATE dog SET dogName = %s, dogAge = %s, dogWeight = %s, " \
@@ -89,8 +153,12 @@ def update_dog(dog_idx):
 # 현재 행동 정보를 반환하는 엔드포인트
 @app.route('/behavior', methods=['GET'])
 def get_now_behavior():
-    dog_idx = request.args.get('dog_idx')
     try:
+        # 세션에서 사용자 정보 확인
+        dog_idx = session.get('dog_idx')
+        if dog_idx is None:
+            return jsonify({'error': 'User not logged in.'}), 401
+
         # 데이터베이스에서 현재 행동 정보 가져오기
         cursor = db.cursor()
         select_query = "SELECT * FROM behavior WHERE dog_idx = %s;"
@@ -111,8 +179,12 @@ def get_now_behavior():
 # 이상행동 정보를 반환하는 엔드포인트
 @app.route('/abnormals', methods=['GET'])
 def get_all_abnormals():
-    dog_idx = request.args.get('dog_idx')
     try:
+        # 세션에서 사용자 정보 확인
+        dog_idx = session.get('dog_idx')
+        if dog_idx is None:
+            return jsonify({'error': 'User not logged in.'}), 401
+
         # 데이터베이스에서 모든 이상 행동 정보 가져오기
         cursor = db.cursor()
         select_query = "SELECT * FROM abnormal WHERE dog_idx = %s;"
@@ -137,10 +209,14 @@ def get_all_abnormals():
 # 가장 많이 한 행동 정보를 반환하는 엔드포인트
 @app.route('/mostBehav', methods=['GET'])
 def get_mostBehav():
-    dog_idx = request.args.get('dog_idx')
     most_date = request.args.get('date')
 
     try:
+        # 세션에서 사용자 정보 확인
+        dog_idx = session.get('dog_idx')
+        if dog_idx is None:
+            return jsonify({'error': 'User not logged in.'}), 401
+
         date = datetime.datetime.strptime(most_date, '%Y-%m-%d').date()
         # 데이터베이스에서 해당하는 날짜의 행동 시간 정보 가져오기
         cursor = db.cursor()
@@ -165,10 +241,14 @@ def get_mostBehav():
 # 행동 통계 정보를 반환하는 엔드포인트
 @app.route('/statistic', methods=['GET'])
 def get_statistic_data():
-    dog_idx = request.args.get('dog_idx')
     stat_date = request.args.get('date')
 
     try:
+        # 세션에서 사용자 정보 확인
+        dog_idx = session.get('dog_idx')
+        if dog_idx is None:
+            return jsonify({'error': 'User not logged in.'}), 401
+
         date = datetime.datetime.strptime(stat_date, '%Y-%m-%d').date()
         # 데이터베이스에서 해당하는 날짜의 행동 시간 정보 가져오기
         cursor = db.cursor()
