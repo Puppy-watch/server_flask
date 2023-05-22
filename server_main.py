@@ -169,14 +169,14 @@ def get_now_behavior():
 
         # 데이터베이스에서 현재 행동 정보 가져오기
         cursor = db.cursor()
-        select_query = "SELECT * FROM behavior WHERE dog_idx = %s;"
+        select_query = "SELECT behaviorName FROM behavior WHERE dog_idx = %s;"
         cursor.execute(select_query, (dog_idx, ))
-        row = cursor.fetchone()
+        label = cursor.fetchone()
         cursor.close()
 
         # 현재 행동 정보를 반환
         behavior = {
-            'nowBehav': row[3]
+            'nowBehav': column_list[label]
         }
 
         return jsonify(behavior)
@@ -268,19 +268,34 @@ def get_statistic_data():
         # 통계 정보를 반환
         statistic = {
             'Date': stat_date,
-            column_list[0]: row[3],
-            column_list[1]: row[4],
-            column_list[2]: row[5],
-            column_list[3]: row[6],
-            column_list[4]: row[7],
-            column_list[5]: row[8],
-            column_list[6]: row[9],
-            column_list[7]: row[10]
+            column_list[0]: int(row[3])//60,
+            column_list[1]: int(row[4])//60,
+            column_list[2]: int(row[5])//60,
+            column_list[3]: int(row[6])//60,
+            column_list[4]: int(row[7])//60,
+            column_list[5]: int(row[8])//60,
+            column_list[6]: int(row[9])//60,
+            column_list[7]: int(row[10])//60
         }
 
         return jsonify(statistic)
     except mysql.connector.Error as error:
         return jsonify({'error': 'Failed to fetch statistic.', 'details': str(error)}), 500
+
+# RDS 연결 확인 및 재연결 함수
+def check_and_reconnect():
+    try:
+        db.ping(reconnect=True)  # RDS 연결 상태 확인
+        print('Connection to RDS is active')
+    except mysql.connector.Error:
+        print('Connection to RDS is lost. Reconnecting...')
+        db.reconnect()  # RDS 재연결
+
+# Flask 애플리케이션 실행 시 연결 확인 및 재연결 함수 호출
+@app.before_request
+def before_request():
+    check_and_reconnect()
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
