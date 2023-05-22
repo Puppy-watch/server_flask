@@ -213,7 +213,7 @@ def get_all_abnormals():
             }
             adnormals.append(adnormal)
 
-        return jsonify({'code': 200, 'message': 'Adnormal List successfully.', 'data': adnormals}), 200
+        return jsonify({'code': 200, 'message': 'Abnormal List successfully.', 'data': adnormals}), 200
     except mysql.connector.Error as error:
         return jsonify({'code': 500, 'error': 'Failed to fetch abnormal.', 'details': str(error)}), 500
 
@@ -274,7 +274,7 @@ def get_statistic_data():
         # 통계 정보를 반환
         statistic = {
             'code': 200,
-            'message': 'MostBehavior successfully.',
+            'message': 'Statistic data successfully.',
             'Date': stat_date,
             column_list[0]: int(row[3])//60,
             column_list[1]: int(row[4])//60,
