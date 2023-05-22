@@ -44,7 +44,7 @@ def signup():
 
     # 필수 정보가 비어있는지 확인
     if not userId or not userPw or not userName or not dogName:
-        return jsonify({'error': 'User ID, PW, User name and dog name are required.'}), 400
+        return jsonify({'code': 400, 'error': 'User ID, PW, User name and dog name are required.'}), 400
 
     try:
         cursor = db.cursor()
@@ -55,7 +55,7 @@ def signup():
         user = cursor.fetchone()
 
         if user:
-            return {'error': 'User ID is already registered.'}, 401
+            return {'code': 401, 'error': 'User ID is already registered.'}, 401
 
         # 데이터베이스에 회원 정보 저장
         hashed_pw = generate_password_hash(userPw)
@@ -74,14 +74,15 @@ def signup():
         session['dog_idx'] = dog_idx
 
         response = {
+            'code': 200,
             'message': 'User created successfully.',
             'user idx': user_idx,
             'dog idx': dog_idx
         }
 
-        return jsonify(response), 201
+        return jsonify(response), 200
     except mysql.connector.Error as error:
-        return jsonify({'error': 'Failed to signup.', 'details': str(error)}), 500
+        return jsonify({'code': 500, 'error': 'Failed to signup.', 'details': str(error)}), 500
 
 # 로그인 엔드포인트
 @app.route('/login', methods=['POST'])
@@ -100,13 +101,14 @@ def login():
         user = cursor.fetchone()
 
         if not user or not check_password_hash(user[2], userPw):
-            return {'error': 'Invalid User ID or Password.'}, 401
+            return {'code': 401, 'error': 'Invalid User ID or Password.'}, 401
 
         # 세션에 사용자 정보 저장
         session['user_idx'] = user[0]
         session['dog_idx'] = get_dog_idx(user[0])
 
         response = {
+            'code': 200,
             'message': 'User login successfully.',
             'user idx': user[0],
             'dog idx': get_dog_idx(user[0])
@@ -114,7 +116,7 @@ def login():
 
         return jsonify(response), 200
     except mysql.connector.Error as error:
-        return jsonify({'error': 'Failed to login.', 'details': str(error)}), 500
+        return jsonify({'code': 500, 'error': 'Failed to login.', 'details': str(error)}), 500
 
 # 로그아웃 엔드포인트
 @app.route('/logout', methods=['POST'])
@@ -122,7 +124,7 @@ def logout():
     # 세션에서 사용자 정보 삭제
     session.pop('user_idx', None)
     session.pop('dog_idx', None)
-    return jsonify({'message': 'User logout successfully.'}), 200
+    return jsonify({'code': 200, 'message': 'User logout successfully.'}), 200
 
 
 # 강아지 정보 수정 엔드포인트
@@ -142,7 +144,7 @@ def update_dog():
         # 세션에서 사용자 정보 확인
         dog_idx = session.get('dog_idx')
         if dog_idx is None:
-            return jsonify({'error': 'User not logged in.'}), 401
+            return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
 
         # 데이터베이스에서 사용자 정보 수정
         cursor = db.cursor()
@@ -153,9 +155,9 @@ def update_dog():
         db.commit()
         cursor.close()
 
-        return jsonify({'message': 'Dog updated successfully.'})
+        return jsonify({'code': 200, 'message': 'Dog updated successfully.'}), 200
     except mysql.connector.Error as error:
-        return jsonify({'error': 'Failed to update dog.', 'details': str(error)}), 500
+        return jsonify({'code': 500, 'error': 'Failed to update dog.', 'details': str(error)}), 500
 
 
 # 현재 행동 정보를 반환하는 엔드포인트
@@ -165,7 +167,7 @@ def get_now_behavior():
         # 세션에서 사용자 정보 확인
         dog_idx = session.get('dog_idx')
         if dog_idx is None:
-            return jsonify({'error': 'User not logged in.'}), 401
+            return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
 
         # 데이터베이스에서 현재 행동 정보 가져오기
         cursor = db.cursor()
@@ -176,12 +178,14 @@ def get_now_behavior():
 
         # 현재 행동 정보를 반환
         behavior = {
+            'code': 200,
+            'message': 'NowBehavior successfully.',
             'nowBehav': column_list[label]
         }
 
-        return jsonify(behavior)
+        return jsonify(behavior), 200
     except mysql.connector.Error as error:
-        return jsonify({'error': 'Failed to fetch abnormal.', 'details': str(error)}), 500
+        return jsonify({'code': 500, 'error': 'Failed to fetch abnormal.', 'details': str(error)}), 500
 
 
 # 이상행동 정보를 반환하는 엔드포인트
@@ -191,7 +195,7 @@ def get_all_abnormals():
         # 세션에서 사용자 정보 확인
         dog_idx = session.get('dog_idx')
         if dog_idx is None:
-            return jsonify({'error': 'User not logged in.'}), 401
+            return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
 
         # 데이터베이스에서 모든 이상 행동 정보 가져오기
         cursor = db.cursor()
@@ -209,9 +213,9 @@ def get_all_abnormals():
             }
             adnormals.append(adnormal)
 
-        return jsonify(adnormals)
+        return jsonify({'code': 200, 'message': 'Adnormal List successfully.', 'data': adnormals}), 200
     except mysql.connector.Error as error:
-        return jsonify({'error': 'Failed to fetch abnormal.', 'details': str(error)}), 500
+        return jsonify({'code': 500, 'error': 'Failed to fetch abnormal.', 'details': str(error)}), 500
 
 
 # 가장 많이 한 행동 정보를 반환하는 엔드포인트
@@ -223,7 +227,7 @@ def get_mostBehav():
         # 세션에서 사용자 정보 확인
         dog_idx = session.get('dog_idx')
         if dog_idx is None:
-            return jsonify({'error': 'User not logged in.'}), 401
+            return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
 
         date = datetime.datetime.strptime(most_date, '%Y-%m-%d').date()
         # 데이터베이스에서 해당하는 날짜의 행동 시간 정보 가져오기
@@ -237,13 +241,15 @@ def get_mostBehav():
         value = row[3:]
         max_idx = value.index(max(value))
         most = {
+            'code': 200,
+            'message': 'MostBehavior successfully.',
             'Date': most_date,
             'mostBehav': column_list[max_idx + 3]
         }
 
-        return jsonify(most)
+        return jsonify(most), 200
     except mysql.connector.Error as error:
-        return jsonify({'error': 'Failed to fetch mostBehavior.', 'details': str(error)}), 500
+        return jsonify({'code': 500, 'error': 'Failed to fetch mostBehavior.', 'details': str(error)}), 500
 
 
 # 행동 통계 정보를 반환하는 엔드포인트
@@ -255,7 +261,7 @@ def get_statistic_data():
         # 세션에서 사용자 정보 확인
         dog_idx = session.get('dog_idx')
         if dog_idx is None:
-            return jsonify({'error': 'User not logged in.'}), 401
+            return jsonify({'code': 500, 'error': 'User not logged in.'}), 401
 
         date = datetime.datetime.strptime(stat_date, '%Y-%m-%d').date()
         # 데이터베이스에서 해당하는 날짜의 행동 시간 정보 가져오기
@@ -267,6 +273,8 @@ def get_statistic_data():
 
         # 통계 정보를 반환
         statistic = {
+            'code': 200,
+            'message': 'MostBehavior successfully.',
             'Date': stat_date,
             column_list[0]: int(row[3])//60,
             column_list[1]: int(row[4])//60,
@@ -278,9 +286,9 @@ def get_statistic_data():
             column_list[7]: int(row[10])//60
         }
 
-        return jsonify(statistic)
+        return jsonify(statistic), 200
     except mysql.connector.Error as error:
-        return jsonify({'error': 'Failed to fetch statistic.', 'details': str(error)}), 500
+        return jsonify({'code': 500, 'error': 'Failed to fetch statistic.', 'details': str(error)}), 500
 
 # RDS 연결 확인 및 재연결 함수
 def check_and_reconnect():
