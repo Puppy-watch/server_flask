@@ -171,16 +171,16 @@ def get_now_behavior():
 
         # 데이터베이스에서 현재 행동 정보 가져오기
         cursor = db.cursor()
-        select_query = "SELECT behaviorName FROM behavior WHERE dog_idx = %s;"
+        select_query = "SELECT * FROM behavior WHERE dog_idx = %s;"
         cursor.execute(select_query, (dog_idx, ))
-        label = cursor.fetchone()
+        row = cursor.fetchone()
         cursor.close()
 
         # 현재 행동 정보를 반환
         behavior = {
             'code': 200,
             'message': 'NowBehavior successfully.',
-            'nowBehav': column_list[label]
+            'nowBehav': column_list[int(row[2])]
         }
 
         return jsonify(behavior), 200
