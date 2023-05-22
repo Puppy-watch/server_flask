@@ -76,8 +76,8 @@ def signup():
         response = {
             'code': 200,
             'message': 'User created successfully.',
-            'user idx': user_idx,
-            'dog idx': dog_idx
+            'userIdx': user_idx,
+            'dogIdx': dog_idx
         }
 
         return jsonify(response), 200
@@ -110,8 +110,8 @@ def login():
         response = {
             'code': 200,
             'message': 'User login successfully.',
-            'user idx': user[0],
-            'dog idx': get_dog_idx(user[0])
+            'userIdx': user[0],
+            'dogIdx': get_dog_idx(user[0])
         }
 
         return jsonify(response), 200
