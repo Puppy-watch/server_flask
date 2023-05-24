@@ -166,6 +166,7 @@ def update_dog():
     data = request.get_json()
 
     # 요청 데이터에서 필요한 정보 추출
+    dog_idx = data.get('dogIdx')
     dogName = data.get('dogName')
     dogAge = data.get('dogAge')
     dogWeight = data.get('dogWeight')
@@ -175,9 +176,10 @@ def update_dog():
 
     try:
         # 세션에서 사용자 정보 확인
-        dog_idx = session.get('dog_idx')
+        # dog_idx = session.get('dog_idx')
         if dog_idx is None:
-            return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
+            return jsonify({'code': 401, 'error': 'dogIdx not found.'}), 401
+            # return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
 
         # 데이터베이스에서 사용자 정보 수정
         cursor = db.cursor()
@@ -196,11 +198,14 @@ def update_dog():
 # 현재 행동 정보를 반환하는 엔드포인트
 @app.route('/behavior', methods=['GET'])
 def get_now_behavior():
+    dog_idx = request.args.get('dogIdx')
+
     try:
         # 세션에서 사용자 정보 확인
-        dog_idx = session.get('dog_idx')
+        # dog_idx = session.get('dog_idx')
         if dog_idx is None:
-            return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
+            return jsonify({'code': 401, 'error': 'dogIdx not found.'}), 401
+            # return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
 
         # 데이터베이스에서 현재 행동 정보 가져오기
         cursor = db.cursor()
@@ -224,11 +229,14 @@ def get_now_behavior():
 # 이상행동 정보를 반환하는 엔드포인트
 @app.route('/abnormals', methods=['GET'])
 def get_all_abnormals():
+    dog_idx = request.args.get('dogIdx')
+
     try:
         # 세션에서 사용자 정보 확인
-        dog_idx = session.get('dog_idx')
+        # dog_idx = session.get('dog_idx')
         if dog_idx is None:
-            return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
+            return jsonify({'code': 401, 'error': 'dogIdx not found.'}), 401
+            # return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
 
         # 데이터베이스에서 모든 이상 행동 정보 가져오기
         cursor = db.cursor()
@@ -255,12 +263,14 @@ def get_all_abnormals():
 @app.route('/mostBehav', methods=['GET'])
 def get_mostBehav():
     # most_date = request.args.get('date')
+    dog_idx = request.args.get('dogIdx')
 
     try:
         # 세션에서 사용자 정보 확인
-        dog_idx = session.get('dog_idx')
+        # dog_idx = session.get('dog_idx')
         if dog_idx is None:
-            return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
+            return jsonify({'code': 401, 'error': 'dogIdx not found.'}), 401
+            # return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
 
         # date = datetime.datetime.strptime(most_date, '%Y-%m-%d').date()
         # 데이터베이스에서 해당하는 날짜의 행동 시간 정보 가져오기
@@ -296,12 +306,14 @@ def get_mostBehav():
 @app.route('/statistic', methods=['GET'])
 def get_statistic_data():
     stat_date = request.args.get('date')
+    dog_idx = request.args.get('dogIdx')
 
     try:
         # 세션에서 사용자 정보 확인
-        dog_idx = session.get('dog_idx')
+        # dog_idx = session.get('dog_idx')
         if dog_idx is None:
-            return jsonify({'code': 500, 'error': 'User not logged in.'}), 401
+            return jsonify({'code': 401, 'error': 'dogIdx not found.'}), 401
+            # return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
 
         date = datetime.datetime.strptime(stat_date, '%Y-%m-%d').date()
         # 데이터베이스에서 해당하는 날짜의 행동 시간 정보 가져오기
