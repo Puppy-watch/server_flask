@@ -84,6 +84,39 @@ def signup():
     except mysql.connector.Error as error:
         return jsonify({'code': 500, 'error': 'Failed to signup.', 'details': str(error)}), 500
 
+# ID 확인 엔드포인트
+@app.route('/checkId', methods=['POST'])
+def check_ID():
+    # 요청에서 필요한 정보 추출
+    data = request.json
+    userId = data.get('userId')
+
+    # 필수 정보가 비어있는지 확인
+    if not userId:
+        return jsonify({'code': 400, 'error': 'User ID are required.'}), 400
+
+    try:
+        cursor = db.cursor()
+
+        # 이미 등록된 사용자인지 확인
+        query = "SELECT * FROM user WHERE userID=%s"
+        cursor.execute(query, (userId,))
+        user = cursor.fetchone()
+
+        if user:
+            return {'code': 401, 'error': 'User ID is already registered.'}, 401
+
+        response = {
+            'code': 200,
+            'message': 'User ID is not registered.'
+        }
+
+        return jsonify(response), 200
+
+    except mysql.connector.Error as error:
+        return jsonify({'code': 500, 'error': 'Failed to check.', 'details': str(error)}), 500
+
+
 # 로그인 엔드포인트
 @app.route('/login', methods=['POST'])
 def login():
@@ -221,7 +254,7 @@ def get_all_abnormals():
 # 가장 많이 한 행동 정보를 반환하는 엔드포인트
 @app.route('/mostBehav', methods=['GET'])
 def get_mostBehav():
-    most_date = request.args.get('date')
+    # most_date = request.args.get('date')
 
     try:
         # 세션에서 사용자 정보 확인
@@ -229,25 +262,32 @@ def get_mostBehav():
         if dog_idx is None:
             return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
 
-        date = datetime.datetime.strptime(most_date, '%Y-%m-%d').date()
+        # date = datetime.datetime.strptime(most_date, '%Y-%m-%d').date()
         # 데이터베이스에서 해당하는 날짜의 행동 시간 정보 가져오기
         cursor = db.cursor()
-        select_query = "SELECT * FROM mostBehavior where dogIdx = %s and mDate = %s;"
-        cursor.execute(select_query, (dog_idx, date))
-        row = cursor.fetchone()
+        select_query = "SELECT * FROM mostBehavior where dogIdx = %s;"
+        cursor.execute(select_query, (dog_idx, ))
+        rows = cursor.fetchall()
         cursor.close()
 
-        # 통계 정보를 반환
-        value = row[3:]
-        max_idx = value.index(max(value))
-        most = {
+        #가장 많이 한 행동
+        mostBehav = []
+        for row in rows:
+            value = row[3:]
+            max_idx = value.index(max(value))
+            most = {
+                'Date': row[2].strftime('%Y-%m-%d'),
+                'mostBehav': column_list[max_idx + 3]
+            }
+            mostBehav.append(most)
+
+        most_json = {
             'code': 200,
             'message': 'MostBehavior successfully.',
-            'Date': most_date,
-            'mostBehav': column_list[max_idx + 3]
+            'data': mostBehav
         }
 
-        return jsonify(most), 200
+        return jsonify(most_json), 200
     except mysql.connector.Error as error:
         return jsonify({'code': 500, 'error': 'Failed to fetch mostBehavior.', 'details': str(error)}), 500
 
