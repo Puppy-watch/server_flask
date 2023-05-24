@@ -161,12 +161,11 @@ def logout():
 
 
 # 강아지 정보 수정 엔드포인트
-@app.route('/dogs', methods=['PUT'])
-def update_dog():
+@app.route('/dogs/<int:dog_idx>', methods=['PUT'])
+def update_dog(dog_idx):
     data = request.get_json()
 
     # 요청 데이터에서 필요한 정보 추출
-    dog_idx = data.get('dogIdx')
     dogName = data.get('dogName')
     dogAge = data.get('dogAge')
     dogWeight = data.get('dogWeight')
@@ -198,7 +197,7 @@ def update_dog():
 # 현재 행동 정보를 반환하는 엔드포인트
 @app.route('/behavior', methods=['GET'])
 def get_now_behavior():
-    dog_idx = request.args.get('dogIdx')
+    dog_idx = request.args.get('dog_idx')
 
     try:
         # 세션에서 사용자 정보 확인
@@ -229,7 +228,7 @@ def get_now_behavior():
 # 이상행동 정보를 반환하는 엔드포인트
 @app.route('/abnormals', methods=['GET'])
 def get_all_abnormals():
-    dog_idx = request.args.get('dogIdx')
+    dog_idx = request.args.get('dog_idx')
 
     try:
         # 세션에서 사용자 정보 확인
@@ -263,7 +262,7 @@ def get_all_abnormals():
 @app.route('/mostBehav', methods=['GET'])
 def get_mostBehav():
     # most_date = request.args.get('date')
-    dog_idx = request.args.get('dogIdx')
+    dog_idx = request.args.get('dog_idx')
 
     try:
         # 세션에서 사용자 정보 확인
@@ -306,7 +305,7 @@ def get_mostBehav():
 @app.route('/statistic', methods=['GET'])
 def get_statistic_data():
     stat_date = request.args.get('date')
-    dog_idx = request.args.get('dogIdx')
+    dog_idx = request.args.get('dog_idx')
 
     try:
         # 세션에서 사용자 정보 확인
