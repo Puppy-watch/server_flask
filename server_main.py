@@ -2,10 +2,17 @@ from flask import Flask, request, jsonify, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_session import Session
 import mysql.connector
-from db_key import db
+from db_key import db, APIKEY, TOKEN
 import datetime
+from threading import Thread
+import time
+from pyfcm import FCMNotification
 
 column_list = ['stand', 'sleep', 'seat', 'walk', 'slowWalk', 'run', 'eat', 'bite']
+last_idx = 0
+
+# 파이어베이스 콘솔에서 얻어 온 서버 키를 넣어 줌
+push_service = FCMNotification(APIKEY)
 
 app = Flask(__name__)
 
@@ -253,7 +260,7 @@ def get_all_abnormals():
             }
             adnormals.append(adnormal)
 
-        return jsonify({'code': 200, 'message': 'Abnormal List successfully.', 'data': adnormals}), 200
+        return jsonify({'code': 200, 'message': 'Abnormal List successfully.', 'data': adnormals.reverse()}), 200
     except mysql.connector.Error as error:
         return jsonify({'code': 500, 'error': 'Failed to fetch abnormal.', 'details': str(error)}), 500
 
@@ -355,6 +362,43 @@ def check_and_reconnect():
 def before_request():
     check_and_reconnect()
 
+def check_database_changes():
+    global last_idx
+    while True:
+        try:
+            cursor = db.cursor()
+
+            # 특정 테이블의 변경 사항을 확인
+            query = "SELECT * FROM abnormal"
+            cursor.execute(query)
+            abnormals = cursor.fetchall()
+
+            # 변경 사항이 있을 경우, 알림을 보내는 로직을 실행합니다.
+            if abnormals[-1][0] != last_idx:
+                last_idx = abnormals[-1][0]
+                data_message = {
+                    "body": "Puppy Watch",
+                    "title": "이상행동 감지!"
+                }
+
+                # 토큰값을 이용해 1명에게 푸시알림을 전송함
+                result = push_service.single_device_data_message(registration_id=TOKEN, data_message=data_message)
+
+                # 전송 결과 출력
+                print(result)
+            else:
+                pass
+
+
+
+        except mysql.connector.Error as error:
+            print("Error:", error)
+
+        # 주기적으로 데이터베이스를 확인하기 위해 일정 시간 간격을 둡니다.
+        time.sleep(60)  # 60초마다 데이터베이스를 확인합니다.
 
 if __name__ == '__main__':
+    change_thread = Thread(target=check_database_changes)
+    change_thread.start()
+
     app.run(host='0.0.0.0', port=5000, debug=True)
