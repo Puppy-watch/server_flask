@@ -300,7 +300,7 @@ def get_mostBehav():
             max_idx = value.index(max(value))
             most = {
                 'Date': row[2].strftime('%Y-%m-%d'),
-                'mostBehav': column_list[max_idx + 3]
+                'mostBehav': column_list[max_idx]
             }
             mostBehav.append(most)
 
@@ -373,21 +373,21 @@ def check_database_changes():
     global last_idx
     while True:
         try:
+            check_and_reconnect()
             cursor = db.cursor()
 
             # 특정 테이블의 변경 사항을 확인
-            query = "SELECT * FROM abnormal"
+            query = "SELECT * FROM abnormal ORDER BY abnorm_idx DESC LIMIT 1"
             cursor.execute(query)
-            abnormals = cursor.fetchall()
+            abnormal = cursor.fetchone()
 
             # 변경 사항이 있을 경우, 알림을 보내는 로직을 실행합니다.
-            if abnormals[-1][0] != last_idx:
-                last_idx = abnormals[-1][0]
+            if abnormal[0] != last_idx:
+                last_idx = abnormal[0]
                 message = messaging.Message(
                     notification=messaging.Notification(
                         title="Puppy Watch",
-                        body="이상행동 감지!",
-                        sound='default'
+                        body="이상행동 감지!"
                     ),
                     token=registration_token,
                 )
@@ -401,7 +401,7 @@ def check_database_changes():
             print("Error:", error)
 
         # 주기적으로 데이터베이스를 확인하기 위해 일정 시간 간격을 둡니다.
-        time.sleep(60)  # 60초마다 데이터베이스를 확인합니다.
+        time.sleep(10)  # 60초마다 데이터베이스를 확인합니다.
 
 if __name__ == '__main__':
     change_thread = Thread(target=check_database_changes)
