@@ -283,9 +283,10 @@ def get_mostBehav():
         # dog_idx = session.get('dog_idx')
         if dog_idx is None:
             return jsonify({'code': 401, 'error': 'dogIdx not found.'}), 401
-            # return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
 
-        # date = datetime.datetime.strptime(most_date, '%Y-%m-%d').date()
+        # check_and_reconnect 함수 호출하여 연결 상태 확인 및 재연결
+        check_and_reconnect()
+
         # 데이터베이스에서 해당하는 날짜의 행동 시간 정보 가져오기
         cursor = db.cursor()
         select_query = "SELECT * FROM mostBehavior where dogIdx = %s;"
