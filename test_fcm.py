@@ -1,24 +1,21 @@
-from pyfcm import FCMNotification
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import messaging
+from db_key import TOKEN
 
-APIKEY = "Your Server Key"
-TOKEN = "Your Token"
+cred = credentials.Certificate('service_key.json')
+default_app = firebase_admin.initialize_app(cred)
+print(default_app.name)  # "[DEFAULT]"
 
-# 파이어베이스 콘솔에서 얻어 온 서버 키를 넣어 줌
-push_service = FCMNotification(APIKEY)
+registration_token = TOKEN
 
+message = messaging.Message(
+    notification = messaging.Notification(
+        title="예약타이틀",
+        body="예약승인되었습니다.",
+    ),
+    token=registration_token,
+)
 
-def sendMessage(body, title):
-    # 메시지 (data 타입)
-    data_message = {
-        "body": body,
-        "title": title
-    }
-
-    # 토큰값을 이용해 1명에게 푸시알림을 전송함
-    result = push_service.single_device_data_message(registration_id=TOKEN, data_message=data_message)
-
-    # 전송 결과 출력
-    print(result)
-
-
-sendMessage("배달의 민족", "치킨 8000원 쿠폰 도착!")
+response = messaging.send(message)
+print('Successfully sent message:', response)
