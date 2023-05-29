@@ -201,6 +201,7 @@ def get_now_behavior():
     dog_idx = request.args.get('dog_idx')
 
     try:
+        db.reconnect()
         # 세션에서 사용자 정보 확인
         # dog_idx = session.get('dog_idx')
         if dog_idx is None:
@@ -355,8 +356,8 @@ def check_and_reconnect():
 # Flask 애플리케이션 실행 시 연결 확인 및 재연결 함수 호출
 @app.before_request
 def before_request():
-    db.reconnect()
-    #check_and_reconnect()
+    check_and_reconnect()
+    #db.reconnect()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
