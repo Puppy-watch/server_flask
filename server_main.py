@@ -2,24 +2,11 @@ from flask import Flask, request, jsonify, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_session import Session
 import mysql.connector
-from db_key import db, TOKEN
+from db_key import db
 import datetime
 
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import messaging
-from threading import Thread
-import time
 
 column_list = ['stand', 'sleep', 'seat', 'walk', 'slowWalk', 'run', 'eat', 'bite']
-last_idx = 0
-
-# 파이어베이스 연결
-cred = credentials.Certificate('service_key.json')
-default_app = firebase_admin.initialize_app(cred)
-print(default_app.name)  # "[DEFAULT]"
-
-registration_token = TOKEN
 
 app = Flask(__name__)
 
@@ -370,42 +357,5 @@ def check_and_reconnect():
 def before_request():
     check_and_reconnect()
 
-def check_database_changes():
-    global last_idx
-    while True:
-        try:
-            check_and_reconnect()
-            cursor = db.cursor()
-
-            # 특정 테이블의 변경 사항을 확인
-            query = "SELECT * FROM abnormal ORDER BY abnorm_idx DESC LIMIT 1"
-            cursor.execute(query)
-            abnormal = cursor.fetchone()
-
-            # 변경 사항이 있을 경우, 알림을 보내는 로직을 실행합니다.
-            if abnormal[0] != last_idx:
-                last_idx = abnormal[0]
-                message = messaging.Message(
-                    notification=messaging.Notification(
-                        title="Puppy Watch",
-                        body="이상행동 감지!"
-                    ),
-                    token=registration_token,
-                )
-
-                response = messaging.send(message)
-                print('Successfully sent message:', response)
-            else:
-                pass
-
-        except mysql.connector.Error as error:
-            print("Error:", error)
-
-        # 주기적으로 데이터베이스를 확인하기 위해 일정 시간 간격을 둡니다.
-        time.sleep(10)  # 60초마다 데이터베이스를 확인합니다.
-
 if __name__ == '__main__':
-    change_thread = Thread(target=check_database_changes)
-    change_thread.start()
-
     app.run(host='0.0.0.0', port=5000, debug=True)
