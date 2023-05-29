@@ -277,7 +277,7 @@ def get_mostBehav():
 
         # 데이터베이스에서 해당하는 날짜의 행동 시간 정보 가져오기
         cursor = db.cursor()
-        select_query = "SELECT * FROM mostBehavior where dogIdx = %s;"
+        select_query = "SELECT mDate, iconName FROM mostIcon where dogIdx = %s ORDER BY mDate;"
         cursor.execute(select_query, (dog_idx, ))
         rows = cursor.fetchall()
         cursor.close()
@@ -285,11 +285,9 @@ def get_mostBehav():
         #가장 많이 한 행동
         mostBehav = []
         for row in rows:
-            value = row[3:]
-            max_idx = value.index(max(value))
             most = {
-                'Date': row[2].strftime('%Y-%m-%d'),
-                'mostBehav': column_list[max_idx]
+                'Date': row[0].strftime('%Y-%m-%d'),
+                'mostBehav': row[1]
             }
             mostBehav.append(most)
 
