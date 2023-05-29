@@ -240,7 +240,7 @@ def get_all_abnormals():
 
         # 데이터베이스에서 모든 이상 행동 정보 가져오기
         cursor = db.cursor()
-        select_query = "SELECT * FROM abnormal WHERE dog_idx = %s;"
+        select_query = "SELECT * FROM abnormal WHERE dog_idx = %s ORDER BY abnormalTime DESC;"
         cursor.execute(select_query, (dog_idx, ))
         rows = cursor.fetchall()
         cursor.close()
@@ -254,7 +254,7 @@ def get_all_abnormals():
             }
             adnormals.append(adnormal)
 
-        return jsonify({'code': 200, 'message': 'Abnormal List successfully.', 'data': adnormals.reverse()}), 200
+        return jsonify({'code': 200, 'message': 'Abnormal List successfully.', 'data': adnormals}), 200
     except mysql.connector.Error as error:
         return jsonify({'code': 500, 'error': 'Failed to fetch abnormal.', 'details': str(error)}), 500
 
