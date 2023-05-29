@@ -29,9 +29,10 @@ def check_database_changes():
         try:
             print('start')
             print(previous_state)
-            db.disconnect()
-            time.sleep(2)
-            check_and_reconnect()
+            # db.disconnect()
+            # time.sleep(2)
+            # check_and_reconnect()
+            db.reconnect()
             cursor = db.cursor()
 
             # abnormal 테이블의 변경 사항을 확인

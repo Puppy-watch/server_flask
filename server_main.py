@@ -355,8 +355,8 @@ def check_and_reconnect():
 # Flask 애플리케이션 실행 시 연결 확인 및 재연결 함수 호출
 @app.before_request
 def before_request():
-    db.disconnect()
-    check_and_reconnect()
+    db.reconnect()
+    #check_and_reconnect()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
