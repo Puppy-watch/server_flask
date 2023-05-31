@@ -41,7 +41,7 @@ def signup():
     userId = data.get('userId')
     userPw = data.get('userPw')
     userName = data.get('userName')
-    # dogName = data.get('dogName')
+    dogName = 'tempName'
 
     # 필수 정보가 비어있는지 확인
     if not userId or not userPw or not userName:
@@ -64,15 +64,15 @@ def signup():
         cursor.execute(insert_query, (userId, hashed_pw, userName))
         db.commit()
         user_idx = cursor.lastrowid
-        # insert_query2 = "INSERT INTO dog (user_idx, dogName) VALUES (%s, %s);"
-        # cursor.execute(insert_query2, (user_idx, dogName))
-        # db.commit()
-        # dog_idx = cursor.lastrowid
+        insert_query2 = "INSERT INTO dog (user_idx, dogName) VALUES (%s, %s);"
+        cursor.execute(insert_query2, (user_idx, dogName))
+        db.commit()
+        dog_idx = cursor.lastrowid
         cursor.close()
 
         # 세션에 사용자 정보 저장
         session['user_idx'] = user_idx
-        # session['dog_idx'] = dog_idx
+        session['dog_idx'] = dog_idx
 
         response = {
             'code': 200,
