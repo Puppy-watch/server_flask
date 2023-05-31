@@ -27,11 +27,6 @@ def check_database_changes():
 
     while True:
         try:
-            print('start')
-            print(previous_state)
-            # db.disconnect()
-            # time.sleep(2)
-            # check_and_reconnect()
             db.reconnect()
             cursor = db.cursor()
 

@@ -41,10 +41,10 @@ def signup():
     userId = data.get('userId')
     userPw = data.get('userPw')
     userName = data.get('userName')
-    dogName = data.get('dogName')
+    # dogName = data.get('dogName')
 
     # 필수 정보가 비어있는지 확인
-    if not userId or not userPw or not userName or not dogName:
+    if not userId or not userPw or not userName:
         return jsonify({'code': 400, 'error': 'User ID, PW, User name and dog name are required.'}), 400
 
     try:
@@ -64,21 +64,20 @@ def signup():
         cursor.execute(insert_query, (userId, hashed_pw, userName))
         db.commit()
         user_idx = cursor.lastrowid
-        insert_query2 = "INSERT INTO dog (user_idx, dogName) VALUES (%s, %s);"
-        cursor.execute(insert_query2, (user_idx, dogName))
-        db.commit()
-        dog_idx = cursor.lastrowid
+        # insert_query2 = "INSERT INTO dog (user_idx, dogName) VALUES (%s, %s);"
+        # cursor.execute(insert_query2, (user_idx, dogName))
+        # db.commit()
+        # dog_idx = cursor.lastrowid
         cursor.close()
 
         # 세션에 사용자 정보 저장
         session['user_idx'] = user_idx
-        session['dog_idx'] = dog_idx
+        # session['dog_idx'] = dog_idx
 
         response = {
             'code': 200,
             'message': 'User created successfully.',
-            'userIdx': user_idx,
-            'dogIdx': dog_idx
+            'userIdx': user_idx
         }
 
         return jsonify(response), 200
@@ -277,7 +276,7 @@ def get_mostBehav():
 
         # 데이터베이스에서 해당하는 날짜의 행동 시간 정보 가져오기
         cursor = db.cursor()
-        select_query = "SELECT mDate, iconName FROM mostIcon where dogIdx = %s ORDER BY mDate;"
+        select_query = "SELECT * FROM mostBehavior where dogIdx = %s ORDER BY mDate DESC;"
         cursor.execute(select_query, (dog_idx, ))
         rows = cursor.fetchall()
         cursor.close()
@@ -285,9 +284,11 @@ def get_mostBehav():
         #가장 많이 한 행동
         mostBehav = []
         for row in rows:
+            value = row[3:]
+            max_idx = value.index(max(value))
             most = {
-                'Date': row[0].strftime('%Y-%m-%d'),
-                'mostBehav': row[1]
+                'Date': row[2].strftime('%Y-%m-%d'),
+                'mostBehav': column_list[max_idx]
             }
             mostBehav.append(most)
 
