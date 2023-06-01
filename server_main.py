@@ -217,9 +217,9 @@ def get_dog_info():
             'dogName': row[2],
             'dogAge': row[3],
             'dogWeight': row[4],
-            'firstTime': row[5].strftime('%H:%M:%S'),
-            'secondTime': row[6].strftime('%H:%M:%S'),
-            'thirdTime': row[7].strftime('%H:%M:%S')
+            'firstTime': str(row[5]),
+            'secondTime': str(row[6]),
+            'thirdTime': str(row[7])
         }
 
         return jsonify(behavior), 200
