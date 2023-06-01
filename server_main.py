@@ -195,7 +195,7 @@ def update_dog(dog_idx):
 
 # 현재 행동 정보를 반환하는 엔드포인트
 @app.route('/dogs_info', methods=['GET'])
-def get_now_behavior():
+def get_dog_info():
     dog_idx = request.args.get('dog_idx')
 
     try:
