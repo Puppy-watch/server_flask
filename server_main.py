@@ -193,6 +193,38 @@ def update_dog(dog_idx):
     except mysql.connector.Error as error:
         return jsonify({'code': 500, 'error': 'Failed to update dog.', 'details': str(error)}), 500
 
+# 현재 행동 정보를 반환하는 엔드포인트
+@app.route('/dogs_info', methods=['GET'])
+def get_now_behavior():
+    dog_idx = request.args.get('dog_idx')
+
+    try:
+        db.reconnect()
+        if dog_idx is None:
+            return jsonify({'code': 401, 'error': 'dogIdx not found.'}), 401
+
+        # 데이터베이스에서 현재 행동 정보 가져오기
+        cursor = db.cursor()
+        select_query = "SELECT * FROM dog WHERE dog_idx = %s;"
+        cursor.execute(select_query, (dog_idx, ))
+        row = cursor.fetchone()
+        cursor.close()
+
+        # 현재 행동 정보를 반환
+        behavior = {
+            'code': 200,
+            'message': 'Dog Info successfully.',
+            'dogName': row[2],
+            'dogAge': row[3],
+            'dogWeight': row[4],
+            'firstTime': row[5],
+            'secondTime': row[6],
+            'thirdTime': row[7]
+        }
+
+        return jsonify(behavior), 200
+    except mysql.connector.Error as error:
+        return jsonify({'code': 500, 'error': 'Failed to find dog Info.', 'details': str(error)}), 500
 
 # 현재 행동 정보를 반환하는 엔드포인트
 @app.route('/behavior', methods=['GET'])
@@ -201,11 +233,8 @@ def get_now_behavior():
 
     try:
         db.reconnect()
-        # 세션에서 사용자 정보 확인
-        # dog_idx = session.get('dog_idx')
         if dog_idx is None:
             return jsonify({'code': 401, 'error': 'dogIdx not found.'}), 401
-            # return jsonify({'code': 401, 'error': 'User not logged in.'}), 401
 
         # 데이터베이스에서 현재 행동 정보 가져오기
         cursor = db.cursor()
